@@ -141,6 +141,8 @@ graph TB
     UC1 -. "Include" .-> UC7
 ```
 
+![Use Case Diagram RKM](gambar-alur/use-case-RKM.drawio.png)
+
 ### Penjelasan Use Case:
 - **Ketua RKM**: Akses penuh ke semua fitur, termasuk manajemen pengguna
 - **Bendahara**: Fokus pada keuangan (iuran & pengeluaran), laporan keuangan, bukti pembayaran, dan notifikasi
@@ -176,6 +178,8 @@ flowchart TD
     Q --> G
 ```
 
+![Flowchart Login dan Autentikasi](gambar-alur/flowchart-login.drawio.png)
+
 ### 5.2 Alur Sync Data Offline-Online
 ```mermaid
 flowchart LR
@@ -192,6 +196,8 @@ flowchart LR
     K --> M[Update local database]
     L --> N[Coba ulang nanti]
 ```
+
+![Flowchart Sync Data Offline-Online](gambar-alur/flowchart-sync-data-offline&online.drawio.png)
 
 ---
 
@@ -433,6 +439,8 @@ flowchart TD
     R --> T[Update UI & refresh data]
 ```
 
+![Flowchart Input Pembayaran Iuran](gambar-alur/flowchart-input-pembayaran-iuran.drawio.png)
+
 ---
 
 ## 10. Offline Strategy
@@ -480,6 +488,8 @@ graph LR
     F -->|Session Data| D
     G -->|Webhook| D
 ```
+
+![Diagram Infrastruktur RKM](gambar-alur/diagram-infrastruktur.drawio.png)
 
 ### 11.2 Environment Setup
 | Environment | URL | Database | Auto-deploy |

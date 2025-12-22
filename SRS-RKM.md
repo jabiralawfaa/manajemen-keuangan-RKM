@@ -105,67 +105,46 @@ Membangun sistem administrasi yang handal, dapat diakses offline, dan mudah digu
 ## 4. Use Case Diagram
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFD700', 'edgeLabelBackground':'#fff'}}}%%
-useCaseDiagram
-    title Use Case Diagram - Sistem Administrasi RKM
+graph TB
+    subgraph "Sistem Administrasi RKM"
+        UC1["(UC1) Kelola Anggota"]
+        UC2["(UC2) Input Iuran"]
+        UC3["(UC3) Input Pengeluaran"]
+        UC4["(UC4) Laporan Keuangan"]
+        UC5["(UC5) Notifikasi WA"]
+        UC6["(UC6) Kelola Pengguna"]
+        UC7["(UC7) Sync Offline"]
+        UC8["(UC8) Bukti Pembayaran"]
+    end
 
-    actor Ketua as K
-    actor Bendahara as B
-    actor Sekretaris as S
+    K["Ketua RKM"] -- "Akses" --> UC1
+    K -- "Akses" --> UC2
+    K -- "Akses" --> UC3
+    K -- "Akses" --> UC4
+    K -- "Akses" --> UC6
+    K -- "Akses" --> UC7
 
-    rectangle Sistem_Administrasi_RKM {
-        (Kelola_Data_Anggota) as (Kelola Anggota)
-        (Input_Pembayaran_Iuran) as (Input Iuran)
-        (Input_Pengeluaran) as (Input Pengeluaran)
-        (Generate_Laporan_Keuangan) as (Laporan Keuangan)
-        (Kirim_Notifikasi_WA) as (Notifikasi WA)
-        (Kelola_Pengguna) as (Kelola Pengguna)
-        (Sync_Data_Offline) as (Sync Offline)
-        (Generate_Bukti_Pembayaran) as (Bukti Pembayaran)
-        
-        K --> (Kelola Anggota)
-        K --> (Input Iuran)
-        K --> (Input Pengeluaran)
-        K --> (Laporan Keuangan)
-        K --> (Kelola Pengguna)
-        K --> (Sync Offline)
-        
-        B --> (Input Iuran)
-        B --> (Input Pengeluaran)
-        B --> (Laporan Keuangan)
-        B --> (Bukti Pembayaran)
-        B --> (Notifikasi WA)
-        B --> (Sync Offline)
-        
-        S --> (Kelola Anggota)
-        S --> (Sync Offline)
-        
-        (Input Iuran) .-> (Bukti Pembayaran) : «include»
-        (Bukti Pembayaran) .-> (Notifikasi WA) : «include»
-        (Input Iuran) .-> (Sync Offline) : «include»
-        (Input Pengeluaran) .-> (Sync Offline) : «include»
-        (Kelola Anggota) .-> (Sync Offline) : «include»
-        
-        note right of K
-            <b>Ketua RKM</b>
-            Akses penuh ke semua fitur
-            Termasuk manajemen pengguna
-        end note
-        
-        note right of B
-            <b>Bendahara</b>
-            Fokus pada keuangan
-            Input iuran & pengeluaran
-            Generate laporan & bukti
-        end note
-        
-        note right of S
-            <b>Sekretaris</b>
-            Manajemen data anggota
-            Input data dasar
-        end note
-    }
+    B["Bendahara"] -- "Akses" --> UC2
+    B -- "Akses" --> UC3
+    B -- "Akses" --> UC4
+    B -- "Akses" --> UC8
+    B -- "Akses" --> UC5
+    B -- "Akses" --> UC7
+
+    S["Sekretaris"] -- "Akses" --> UC1
+    S -- "Akses" --> UC7
+
+    UC2 -. "Include" .-> UC8
+    UC8 -. "Include" .-> UC5
+    UC2 -. "Include" .-> UC7
+    UC3 -. "Include" .-> UC7
+    UC1 -. "Include" .-> UC7
 ```
+
+### Penjelasan Use Case:
+- **Ketua RKM**: Akses penuh ke semua fitur, termasuk manajemen pengguna
+- **Bendahara**: Fokus pada keuangan (iuran & pengeluaran), laporan keuangan, bukti pembayaran, dan notifikasi
+- **Sekretaris**: Manajemen data anggota dan sinkronisasi offline
 
 ---
 

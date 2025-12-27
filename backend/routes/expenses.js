@@ -2,6 +2,7 @@ const express = require('express');
 const Expense = require('../models/Expense');
 const User = require('../models/User');
 const { auth, checkRole } = require('../middleware/auth');
+const { pool } = require('../config/db');
 const router = express.Router();
 
 // @desc    Get all expenses
@@ -10,32 +11,64 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, category, startDate, endDate } = req.query;
-    
-    // Buat filter berdasarkan kategori dan rentang tanggal jika disediakan
-    const filter = {};
+    const offset = (page - 1) * limit;
+
+    // Buat query berdasarkan kategori dan rentang tanggal jika disediakan
+    let query = 'SELECT e.*, u.name as created_by_name FROM expenses e LEFT JOIN users u ON e.created_by = u.id WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+
     if (category) {
-      filter.category = category;
+      paramCount++;
+      query += ` AND e.category = $${paramCount}`;
+      params.push(category);
     }
-    if (startDate || endDate) {
-      filter.date = {};
-      if (startDate) {
-        filter.date.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        filter.date.$lte = new Date(endDate);
-      }
+
+    if (startDate) {
+      paramCount++;
+      query += ` AND e.date >= $${paramCount}`;
+      params.push(startDate);
     }
-    
-    const expenses = await Expense.find(filter)
-      .populate('createdBy', 'name username role')
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ date: -1 });
-    
-    const total = await Expense.countDocuments(filter);
-    
+
+    if (endDate) {
+      paramCount++;
+      query += ` AND e.date <= $${paramCount}`;
+      params.push(endDate);
+    }
+
+    query += ` ORDER BY e.date DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(limit, offset);
+
+    const expensesResult = await pool.query(query, params);
+
+    // Hitung total pengeluaran
+    let countQuery = 'SELECT COUNT(*) as total FROM expenses e LEFT JOIN users u ON e.created_by = u.id WHERE 1=1';
+    const countParams = [];
+    let countParamCount = 0;
+
+    if (category) {
+      countParamCount++;
+      countQuery += ` AND e.category = $${countParamCount}`;
+      countParams.push(category);
+    }
+
+    if (startDate) {
+      countParamCount++;
+      countQuery += ` AND e.date >= $${countParamCount}`;
+      countParams.push(startDate);
+    }
+
+    if (endDate) {
+      countParamCount++;
+      countQuery += ` AND e.date <= $${countParamCount}`;
+      countParams.push(endDate);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].total);
+
     res.json({
-      expenses,
+      expenses: expensesResult.rows,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total
@@ -51,12 +84,12 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id).populate('createdBy', 'name username role');
-    
+    const expense = await Expense.findById(req.params.id);
+
     if (!expense) {
       return res.status(404).json({ message: 'Pengeluaran tidak ditemukan' });
     }
-    
+
     res.json(expense);
   } catch (error) {
     console.error(error);
@@ -81,19 +114,18 @@ router.post('/', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
       return res.status(400).json({ message: 'Semua field wajib diisi' });
     }
 
-    const expense = new Expense({
+    const expense = await Expense.create({
       date,
       category,
       amount,
       description,
-      createdBy: req.user._id // Set createdBy ke user yang sedang login
+      createdBy: req.user.id, // Set createdBy ke user yang sedang login
+      syncStatus: 'synced' // Default status saat dibuat
     });
-
-    await expense.save();
 
     res.status(201).json({
       message: 'Pengeluaran berhasil ditambahkan',
-      expense: await expense.populate('createdBy', 'name username role')
+      expense
     });
   } catch (error) {
     console.error(error);
@@ -106,14 +138,24 @@ router.post('/', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
 // @access  Private (bendahara, ketua)
 router.put('/:id', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndUpdate(
+    const {
+      date,
+      category,
+      amount,
+      description,
+      syncStatus
+    } = req.body;
+
+    const expense = await Expense.update(
       req.params.id,
-      req.body,
       {
-        new: true,
-        runValidators: true
+        date,
+        category,
+        amount,
+        description,
+        syncStatus
       }
-    ).populate('createdBy', 'name username role');
+    );
 
     if (!expense) {
       return res.status(404).json({ message: 'Pengeluaran tidak ditemukan' });
@@ -134,7 +176,7 @@ router.put('/:id', auth, checkRole(['bendahara', 'ketua']), async (req, res) => 
 // @access  Private (ketua)
 router.delete('/:id', auth, checkRole(['ketua']), async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+    const expense = await Expense.remove(req.params.id);
 
     if (!expense) {
       return res.status(404).json({ message: 'Pengeluaran tidak ditemukan' });

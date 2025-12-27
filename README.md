@@ -27,21 +27,23 @@ Sistem administrasi untuk mengelola keanggotaan dan keuangan RKM (Rukun Kematian
 ### Backend
 - Node.js 18.12.0
 - Express.js 4.18.2
-- MongoDB 6.0
-- Mongoose 7.0.0
+- PostgreSQL 15+
+- Sequelize 6.32.0
 - JWT 9.0.0
 - Bcryptjs 2.4.3
+- pg 8.11.0
 
 ## Instalasi
 
 ### Backend
 
-1. Pastikan Node.js dan MongoDB sudah terinstal
+1. Pastikan Node.js dan PostgreSQL sudah terinstal
 2. Clone repository ini
 3. Masuk ke direktori backend: `cd backend`
 4. Install dependensi: `npm install`
 5. Buat file `.env` berdasarkan `.env.example`
-6. Jalankan server: `npm run dev`
+6. Inisialisasi database: `npm run init-db`
+7. Jalankan server: `npm run dev`
 
 ### Frontend
 

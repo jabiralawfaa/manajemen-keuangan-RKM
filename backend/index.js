@@ -1,7 +1,14 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 require('dotenv').config();
+
+const { connectDB } = require('./config/db');
+
+// Import model untuk membuat tabel
+const { createUsersTable } = require('./models/User');
+const { createMembersTable } = require('./models/Member');
+const { createPaymentsTable } = require('./models/Payment');
+const { createExpensesTable } = require('./models/Expense');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,23 +22,25 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/expenses', require('./routes/expenses'));
+app.use('/api/change-password', require('./routes/changePassword'));
 
 // Route dasar
 app.get('/', (req, res) => {
   res.send('API RKM Admin berjalan...');
 });
 
-// Koneksi ke database
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rkm_db', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('Terhubung ke MongoDB');
+// Koneksi ke database, buat tabel-tabel, lalu jalankan server
+connectDB().then(async () => {
+  console.log('Membuat tabel-tabel database...');
+  await createUsersTable();
+  await createMembersTable();
+  await createPaymentsTable();
+  await createExpensesTable();
+  console.log('Tabel-tabel berhasil dibuat');
+
   app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
   });
-})
-.catch((error) => {
-  console.error('Kesalahan koneksi ke MongoDB:', error);
+}).catch((error) => {
+  console.error('Gagal terhubung ke database:', error);
 });

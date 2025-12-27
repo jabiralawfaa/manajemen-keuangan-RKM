@@ -1,26 +1,28 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { findById } = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
     // Ambil token dari header
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ message: 'Tidak ada token, akses ditolak' });
     }
 
     // Verifikasi token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
-    
+
     // Dapatkan user berdasarkan ID dari token
-    const user = await User.findById(decoded.userId).select('-password');
-    
+    const user = await findById(decoded.userId);
+
     if (!user) {
       return res.status(401).json({ message: 'Token tidak valid, user tidak ditemukan' });
     }
 
-    req.user = user;
+    // Hapus password dari objek user sebelum disimpan di req
+    const { password, ...userWithoutPassword } = user;
+    req.user = userWithoutPassword;
     next();
   } catch (error) {
     res.status(401).json({ message: 'Token tidak valid' });

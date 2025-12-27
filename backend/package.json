@@ -6,6 +6,15 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "init-db": "node utils/init-db.js",
+    "migrate": "node migrations/migrate.js",
+    "seed": "node seeders/seed-initial-data.js",
+    "migrate-and-seed": "node migrations/migrate-and-seed.js",
+    "seed-additional-users": "node seeders/seed-additional-users.js",
+    "test-db": "node -e \"require('./config/db').connectDB().then(() => console.log('DB Connection OK')).catch(e => console.error('DB Connection Error:', e.message))\"",
+    "db-health": "node -e \"const DatabaseService = require('./services/databaseService'); DatabaseService.healthCheck().then(console.log).catch(console.error);\"",
+    "list-users": "node -e \"const { getAllUsers } = require('./utils/helpers/userInfo'); getAllUsers().then(users => { console.log('Daftar Akun:'); users.forEach(user => console.log(`- ${user.username} (${user.role}) - ${user.name}`)); }).catch(console.error);\"",
+    "user-stats": "node -e \"const { getUserCountByRole } = require('./utils/helpers/userInfo'); getUserCountByRole().then(counts => { console.log('Statistik Pengguna:'); for (const [role, count] of Object.entries(counts)) { console.log(`- ${role}: ${count}`); } }).catch(console.error);\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,7 +26,8 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.0.0"
+    "pg": "^8.11.0",
+    "sequelize": "^6.32.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

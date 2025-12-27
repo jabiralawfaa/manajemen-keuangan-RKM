@@ -23,17 +23,16 @@ router.post('/register', auth, async (req, res) => {
     }
 
     // Cek apakah user sudah ada
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findByUsername(username);
     if (existingUser) {
       return res.status(400).json({ message: 'Username sudah digunakan' });
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Buat user baru
-    const user = new User({
+    const user = await User.create({
       username,
       password: hashedPassword,
       role,
@@ -41,12 +40,10 @@ router.post('/register', auth, async (req, res) => {
       phone
     });
 
-    await user.save();
-
     res.status(201).json({
       message: 'User berhasil dibuat',
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
         role: user.role,
         name: user.name,
@@ -72,7 +69,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Cek apakah user ada
-    const user = await User.findOne({ username });
+    const user = await User.findByUsername(username);
     if (!user) {
       return res.status(400).json({ message: 'Username atau password salah' });
     }
@@ -85,7 +82,7 @@ router.post('/login', async (req, res) => {
 
     // Buat token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user.id },
       process.env.JWT_SECRET || 'default_secret',
       { expiresIn: '1h' }
     );
@@ -94,7 +91,7 @@ router.post('/login', async (req, res) => {
       message: 'Login berhasil',
       token,
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
         role: user.role,
         name: user.name,
@@ -113,7 +110,7 @@ router.post('/login', async (req, res) => {
 router.get('/profile', auth, (req, res) => {
   res.json({
     user: {
-      id: req.user._id,
+      id: req.user.id,
       username: req.user.username,
       role: req.user.role,
       name: req.user.name,

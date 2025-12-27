@@ -2,6 +2,7 @@ const express = require('express');
 const Payment = require('../models/Payment');
 const Member = require('../models/Member');
 const { auth, checkRole } = require('../middleware/auth');
+const { pool } = require('../config/db');
 const router = express.Router();
 
 // @desc    Get all payments
@@ -10,26 +11,52 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, month, memberId } = req.query;
-    
+    const offset = (page - 1) * limit;
+
     // Buat filter berdasarkan bulan dan memberId jika disediakan
-    const filter = {};
+    let query = 'SELECT p.*, m.head_name, m.member_number FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+
     if (month) {
-      filter.month = month;
+      paramCount++;
+      query += ` AND p.month = $${paramCount}`;
+      params.push(month);
     }
+
     if (memberId) {
-      filter.memberId = memberId;
+      paramCount++;
+      query += ` AND p.member_id = $${paramCount}`;
+      params.push(memberId);
     }
-    
-    const payments = await Payment.find(filter)
-      .populate('memberId', 'headName kkNumber memberNumber')
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ paymentDate: -1 });
-    
-    const total = await Payment.countDocuments(filter);
-    
+
+    query += ` ORDER BY p.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(limit, offset);
+
+    const paymentsResult = await pool.query(query, params);
+
+    // Hitung total pembayaran
+    let countQuery = 'SELECT COUNT(*) as total FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
+    const countParams = [];
+    let countParamCount = 0;
+
+    if (month) {
+      countParamCount++;
+      countQuery += ` AND p.month = $${countParamCount}`;
+      countParams.push(month);
+    }
+
+    if (memberId) {
+      countParamCount++;
+      countQuery += ` AND p.member_id = $${countParamCount}`;
+      countParams.push(memberId);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].total);
+
     res.json({
-      payments,
+      payments: paymentsResult.rows,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total
@@ -45,12 +72,12 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate('memberId', 'headName kkNumber memberNumber');
-    
+    const payment = await Payment.findById(req.params.id);
+
     if (!payment) {
       return res.status(404).json({ message: 'Pembayaran tidak ditemukan' });
     }
-    
+
     res.json(payment);
   } catch (error) {
     console.error(error);
@@ -83,27 +110,24 @@ router.post('/', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
     }
 
     // Cek apakah nomor bukti pembayaran sudah digunakan
-    const existingPayment = await Payment.findOne({ receiptNumber });
-    if (existingPayment) {
+    const checkQuery = 'SELECT * FROM payments WHERE receipt_number = $1';
+    const checkResult = await pool.query(checkQuery, [receiptNumber]);
+    if (checkResult.rows.length > 0) {
       return res.status(400).json({ message: 'Nomor bukti pembayaran sudah digunakan' });
     }
 
-    const payment = new Payment({
+    const payment = await Payment.create({
       memberId,
       paymentDate,
       month,
       amount,
-      receiptNumber
+      receiptNumber,
+      syncStatus: 'synced' // Default status saat dibuat
     });
-
-    await payment.save();
-
-    // Update status anggota jika diperlukan
-    // (logika bisa ditambahkan sesuai kebutuhan)
 
     res.status(201).json({
       message: 'Pembayaran berhasil ditambahkan',
-      payment: await payment.populate('memberId', 'headName kkNumber memberNumber')
+      payment
     });
   } catch (error) {
     console.error(error);
@@ -116,14 +140,26 @@ router.post('/', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
 // @access  Private (bendahara, ketua)
 router.put('/:id', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
   try {
-    const payment = await Payment.findByIdAndUpdate(
+    const {
+      memberId,
+      paymentDate,
+      month,
+      amount,
+      receiptNumber,
+      syncStatus
+    } = req.body;
+
+    const payment = await Payment.update(
       req.params.id,
-      req.body,
       {
-        new: true,
-        runValidators: true
+        memberId,
+        paymentDate,
+        month,
+        amount,
+        receiptNumber,
+        syncStatus
       }
-    ).populate('memberId', 'headName kkNumber memberNumber');
+    );
 
     if (!payment) {
       return res.status(404).json({ message: 'Pembayaran tidak ditemukan' });
@@ -144,7 +180,7 @@ router.put('/:id', auth, checkRole(['bendahara', 'ketua']), async (req, res) => 
 // @access  Private (ketua)
 router.delete('/:id', auth, checkRole(['ketua']), async (req, res) => {
   try {
-    const payment = await Payment.findByIdAndDelete(req.params.id);
+    const payment = await Payment.remove(req.params.id);
 
     if (!payment) {
       return res.status(404).json({ message: 'Pembayaran tidak ditemukan' });

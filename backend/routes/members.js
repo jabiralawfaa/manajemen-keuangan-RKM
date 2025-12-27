@@ -8,21 +8,21 @@ const router = express.Router();
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
-    
-    // Buat filter berdasarkan status jika disediakan
-    const filter = {};
+    const { page = 1, limit = 10, status, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Buat filter berdasarkan status dan search jika disediakan
+    const filters = {};
     if (status) {
-      filter.status = status;
+      filters.status = status;
     }
-    
-    const members = await Member.find(filter)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
-    
-    const total = await Member.countDocuments(filter);
-    
+    if (search) {
+      filters.search = search;
+    }
+
+    const members = await Member.findByFilters(filters, parseInt(limit), parseInt(offset));
+    const total = await Member.countByFilters(filters);
+
     res.json({
       members,
       totalPages: Math.ceil(total / limit),
@@ -41,11 +41,11 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
-    
+
     if (!member) {
       return res.status(404).json({ message: 'Anggota tidak ditemukan' });
     }
-    
+
     res.json(member);
   } catch (error) {
     console.error(error);
@@ -55,7 +55,7 @@ router.get('/:id', auth, async (req, res) => {
 
 // @desc    Create new member
 // @route   POST /api/members
-// @access  Private (sekretaris, bendahara, ketua)
+// @access  Private (sekretaris, ketua)
 router.post('/', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
   try {
     const {
@@ -65,35 +65,41 @@ router.post('/', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
       headName,
       wifeName,
       phone,
-      address,
+      street,
+      kelurahan,
+      kecamatan,
+      kabupaten,
       beneficiaryName,
-      dependentsCount
+      dependentsCount,
+      status = 'active'
     } = req.body;
 
     // Validasi input
-    if (!registrationDate || !kkNumber || !memberNumber || !headName || !wifeName || !phone || !address || !beneficiaryName || dependentsCount === undefined) {
+    if (!registrationDate || !kkNumber || !memberNumber || !headName || !wifeName || !phone || !beneficiaryName || dependentsCount === undefined) {
       return res.status(400).json({ message: 'Semua field wajib diisi' });
     }
 
     // Cek apakah nomor anggota sudah digunakan
-    const existingMember = await Member.findOne({ memberNumber });
+    const existingMember = await Member.findByMemberNumber(memberNumber);
     if (existingMember) {
       return res.status(400).json({ message: 'Nomor anggota sudah digunakan' });
     }
 
-    const member = new Member({
+    const member = await Member.create({
       registrationDate,
       kkNumber,
       memberNumber,
       headName,
       wifeName,
       phone,
-      address,
+      street,
+      kelurahan,
+      kecamatan,
+      kabupaten,
       beneficiaryName,
-      dependentsCount
+      dependentsCount,
+      status
     });
-
-    await member.save();
 
     res.status(201).json({
       message: 'Anggota berhasil ditambahkan',
@@ -110,12 +116,38 @@ router.post('/', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
 // @access  Private (sekretaris, ketua)
 router.put('/:id', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
   try {
-    const member = await Member.findByIdAndUpdate(
+    const {
+      registrationDate,
+      kkNumber,
+      memberNumber,
+      headName,
+      wifeName,
+      phone,
+      street,
+      kelurahan,
+      kecamatan,
+      kabupaten,
+      beneficiaryName,
+      dependentsCount,
+      status
+    } = req.body;
+
+    const member = await Member.update(
       req.params.id,
-      req.body,
       {
-        new: true,
-        runValidators: true
+        registrationDate,
+        kkNumber,
+        memberNumber,
+        headName,
+        wifeName,
+        phone,
+        street,
+        kelurahan,
+        kecamatan,
+        kabupaten,
+        beneficiaryName,
+        dependentsCount,
+        status
       }
     );
 
@@ -138,7 +170,7 @@ router.put('/:id', auth, checkRole(['sekretaris', 'ketua']), async (req, res) =>
 // @access  Private (ketua)
 router.delete('/:id', auth, checkRole(['ketua']), async (req, res) => {
   try {
-    const member = await Member.findByIdAndDelete(req.params.id);
+    const member = await Member.remove(req.params.id);
 
     if (!member) {
       return res.status(404).json({ message: 'Anggota tidak ditemukan' });

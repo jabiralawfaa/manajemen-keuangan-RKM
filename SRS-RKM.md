@@ -75,8 +75,8 @@ Membangun sistem administrasi yang handal, dapat diakses offline, dan mudah digu
 |-----------|-------|----------|
 | Node.js | 18.12.0 | Runtime environment |
 | Express.js | 4.18.2 | Web framework |
-| MongoDB | 6.0 | Database utama |
-| Mongoose | 7.0.0 | ODM (Object Data Modeling) |
+| PostgreSQL | 15+ | Database utama |
+| Sequelize | 6.32.0 | ORM (Object Relational Mapping) |
 | JWT | 9.0.0 | Authentication & authorization |
 | Socket.io | 4.6.0 | Real-time sync notifications |
 | Bull | 4.8.0 | Queue management untuk background jobs |
@@ -86,7 +86,7 @@ Membangun sistem administrasi yang handal, dapat diakses offline, dan mudah digu
 ### 3.3 Database
 | Jenis | Teknologi | Kegunaan |
 |-------|-----------|----------|
-| Online | MongoDB Atlas | Database utama cloud-based |
+| Online | NeonDB (PostgreSQL) | Database utama cloud-based |
 | Offline | IndexedDB | Local storage untuk offline mode |
 | Cache | Redis | Session management & caching |
 
@@ -95,7 +95,7 @@ Membangun sistem administrasi yang handal, dapat diakses offline, dan mudah digu
 |----------|-----------|----------|
 | Hosting Frontend | Vercel | PWA deployment dengan CDN |
 | Hosting Backend | Render.com | Node.js server dengan auto-scaling |
-| Database | MongoDB Atlas | Cloud database dengan backup |
+| Database | NeonDB (PostgreSQL) | Cloud database dengan backup |
 | Monitoring | Sentry | Error tracking & performance monitoring |
 | Version Control | GitHub | Code repository & CI/CD |
 | Testing | Jest + React Testing Library | Unit & integration testing |
@@ -300,68 +300,74 @@ flowchart LR
 
 ## 8. Database Schema
 
-### 8.1 MongoDB Schema (Online)
-```javascript
-// User Schema
-{
-  _id: ObjectId,
-  username: String (unique),
-  password: String (hashed),
-  role: ['ketua', 'bendahara', 'sekretaris'],
-  name: String,
-  phone: String,
-  createdAt: Date,
-  lastLogin: Date,
-  syncToken: String // untuk offline sync
-}
+### 8.1 PostgreSQL Schema (Online)
 
-// Member Schema
-{
-  _id: ObjectId,
-  registrationDate: Date,
-  kkNumber: String,
-  memberNumber: String (RKM-YYYY-001),
-  headName: String,
-  wifeName: String,
-  phone: String,
-  address: {
-    street: String,
-    kelurahan: String,
-    kecamatan: String,
-    kabupaten: String
-  },
-  beneficiaryName: String,
-  dependentsCount: Number,
-  status: ['active', 'inactive'],
-  createdAt: Date,
-  updatedAt: Date
-}
+#### Tabel Users
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('ketua', 'bendahara', 'sekretaris')),
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP,
+    sync_token VARCHAR(255) -- untuk offline sync
+);
+```
 
-// Payment Schema
-{
-  _id: ObjectId,
-  memberId: ObjectId (ref: Member),
-  paymentDate: Date,
-  month: String (YYYY-MM),
-  amount: Number,
-  receiptNumber: String,
-  proofImage: String (URL),
-  syncStatus: ['pending', 'synced', 'failed'],
-  offlineId: String // untuk identifikasi offline
-}
+#### Tabel Members
+```sql
+CREATE TABLE members (
+    id SERIAL PRIMARY KEY,
+    registration_date DATE NOT NULL,
+    kk_number VARCHAR(255),
+    member_number VARCHAR(100) UNIQUE NOT NULL, -- format: RKM-YYYY-001
+    head_name VARCHAR(255) NOT NULL,
+    wife_name VARCHAR(255),
+    phone VARCHAR(20),
+    street VARCHAR(255),
+    kelurahan VARCHAR(255),
+    kecamatan VARCHAR(255),
+    kabupaten VARCHAR(255),
+    beneficiary_name VARCHAR(255) NOT NULL,
+    dependents_count INTEGER DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-// Expense Schema
-{
-  _id: ObjectId,
-  date: Date,
-  category: ['kain_kafan', 'memandikan', 'transportasi', 'alat_tulis', 'lain_lain'],
-  amount: Number,
-  description: String,
-  proofImage: String (URL),
-  createdBy: ObjectId (ref: User),
-  syncStatus: ['pending', 'synced', 'failed'],
-  offlineId: String
-}
+#### Tabel Payments
+```sql
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
+    payment_date DATE NOT NULL,
+    month VARCHAR(7) NOT NULL, -- format: YYYY-MM
+    amount DECIMAL(10, 2) NOT NULL,
+    receipt_number VARCHAR(255),
+    proof_image VARCHAR(500), -- URL bukti pembayaran
+    sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('pending', 'synced', 'failed')),
+    offline_id VARCHAR(255) -- untuk identifikasi offline
+);
+```
+
+#### Tabel Expenses
+```sql
+CREATE TABLE expenses (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    category VARCHAR(50) NOT NULL CHECK (category IN ('kain_kafan', 'memandikan', 'transportasi', 'alat_tulis', 'lain_lain')),
+    amount DECIMAL(10, 2) NOT NULL,
+    description TEXT,
+    proof_image VARCHAR(500), -- URL bukti pengeluaran
+    created_by INTEGER REFERENCES users(id),
+    sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('pending', 'synced', 'failed')),
+    offline_id VARCHAR(255) -- untuk identifikasi offline
+);
+```
 ```
 
 ### 8.2 IndexedDB Schema (Offline)
@@ -481,7 +487,7 @@ graph LR
     A[User Devices] -->|HTTPS| B[Vercel CDN]
     A -->|Service Worker| C[IndexedDB Local]
     B -->|API Calls| D[Render.com Backend]
-    D -->|Database Ops| E[MongoDB Atlas]
+    D -->|Database Ops| E[NeonDB (PostgreSQL)]
     D -->|Queue Processing| F[Redis Cache]
     D -->|WhatsApp API| G[Twilio Cloud]
     E -->|Backup| H[Cloud Storage]
@@ -494,9 +500,9 @@ graph LR
 ### 11.2 Environment Setup
 | Environment | URL | Database | Auto-deploy |
 |-------------|-----|----------|-------------|
-| Development | localhost:3000 | localhost:27017 | Manual |
-| Staging | staging.rkm-admin.vercel.app | MongoDB Atlas Staging | GitHub Push |
-| Production | rkm-admin.vercel.app | MongoDB Atlas Production | GitHub Release |
+| Development | localhost:3000 | localhost:5432 | Manual |
+| Staging | staging.rkm-admin.vercel.app | NeonDB Staging | GitHub Push |
+| Production | rkm-admin.vercel.app | NeonDB Production | GitHub Release |
 
 ### 11.3 Security Measures
 - **HTTPS** wajib di semua environment

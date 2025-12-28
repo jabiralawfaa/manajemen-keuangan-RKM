@@ -8,7 +8,7 @@ const router = express.Router();
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, search } = req.query;
+    const { page = 1, limit = 10, status, search, sortBy, sortOrder } = req.query;
     const offset = (page - 1) * limit;
 
     // Buat filter berdasarkan status dan search jika disediakan
@@ -20,8 +20,56 @@ router.get('/', auth, async (req, res) => {
       filters.search = search;
     }
 
-    const members = await Member.findByFilters(filters, parseInt(limit), parseInt(offset));
+    const members = await Member.findByFilters(filters, parseInt(limit), parseInt(offset), sortBy, sortOrder);
     const total = await Member.countByFilters(filters);
+
+    res.json({
+      members,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Get members with detailed filters
+// @route   GET /api/members/search
+// @access  Private
+router.get('/search', auth, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      registrationDateFrom,
+      registrationDateTo
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    // Buat filter berdasarkan semua parameter yang tersedia
+    const filters = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search;
+    }
+    if (registrationDateFrom) {
+      filters.registrationDateFrom = registrationDateFrom;
+    }
+    if (registrationDateTo) {
+      filters.registrationDateTo = registrationDateTo;
+    }
+
+    const members = await Member.findByFiltersWithDates(filters, parseInt(limit), parseInt(offset), sortBy, sortOrder);
+    const total = await Member.countByFiltersWithDates(filters);
 
     res.json({
       members,

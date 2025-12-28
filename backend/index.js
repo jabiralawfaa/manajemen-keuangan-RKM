@@ -23,6 +23,12 @@ app.use('/api/members', require('./routes/members'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/change-password', require('./routes/changePassword'));
+app.use('/api/reports', require('./routes/financialReports'));
+
+// Routes untuk operasi DELETE
+app.use('/api/delete/members', require('./routes/deleteMembers'));
+app.use('/api/delete/payments', require('./routes/deletePayments'));
+app.use('/api/delete/expenses', require('./routes/deleteExpenses'));
 
 // Route dasar
 app.get('/', (req, res) => {

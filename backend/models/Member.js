@@ -119,7 +119,7 @@ const remove = async (id) => {
 };
 
 // Fungsi untuk mencari member dengan filter
-const findByFilters = async (filters, limit = 10, offset = 0) => {
+const findByFilters = async (filters, limit = 10, offset = 0, sortBy = 'created_at', sortOrder = 'DESC') => {
   let query = 'SELECT * FROM members WHERE 1=1';
   const params = [];
   let paramCount = 0;
@@ -136,7 +136,58 @@ const findByFilters = async (filters, limit = 10, offset = 0) => {
     params.push(`%${filters.search}%`);
   }
 
-  query += ` ORDER BY created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+  // Validasi sortBy dan sortOrder untuk mencegah SQL injection
+  const allowedSortColumns = ['created_at', 'updated_at', 'head_name', 'member_number', 'registration_date'];
+  const allowedSortOrders = ['ASC', 'DESC'];
+
+  const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+  const sortDirection = allowedSortOrders.includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
+
+  query += ` ORDER BY ${sortColumn} ${sortDirection} LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+  params.push(limit, offset);
+
+  const result = await pool.query(query, params);
+  return result.rows;
+};
+
+// Fungsi untuk mencari member dengan filter tanggal pendaftaran
+const findByFiltersWithDates = async (filters, limit = 10, offset = 0, sortBy = 'created_at', sortOrder = 'DESC') => {
+  let query = 'SELECT * FROM members WHERE 1=1';
+  const params = [];
+  let paramCount = 0;
+
+  if (filters.status) {
+    paramCount++;
+    query += ` AND status = $${paramCount}`;
+    params.push(filters.status);
+  }
+
+  if (filters.search) {
+    paramCount++;
+    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    params.push(`%${filters.search}%`);
+  }
+
+  if (filters.registrationDateFrom) {
+    paramCount++;
+    query += ` AND registration_date >= $${paramCount}`;
+    params.push(filters.registrationDateFrom);
+  }
+
+  if (filters.registrationDateTo) {
+    paramCount++;
+    query += ` AND registration_date <= $${paramCount}`;
+    params.push(filters.registrationDateTo);
+  }
+
+  // Validasi sortBy dan sortOrder untuk mencegah SQL injection
+  const allowedSortColumns = ['created_at', 'updated_at', 'head_name', 'member_number', 'registration_date'];
+  const allowedSortOrders = ['ASC', 'DESC'];
+
+  const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+  const sortDirection = allowedSortOrders.includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
+
+  query += ` ORDER BY ${sortColumn} ${sortDirection} LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
   params.push(limit, offset);
 
   const result = await pool.query(query, params);
@@ -165,6 +216,40 @@ const countByFilters = async (filters) => {
   return parseInt(result.rows[0].total);
 };
 
+// Fungsi untuk menghitung total member dengan filter tanggal pendaftaran
+const countByFiltersWithDates = async (filters) => {
+  let query = 'SELECT COUNT(*) as total FROM members WHERE 1=1';
+  const params = [];
+  let paramCount = 0;
+
+  if (filters.status) {
+    paramCount++;
+    query += ` AND status = $${paramCount}`;
+    params.push(filters.status);
+  }
+
+  if (filters.search) {
+    paramCount++;
+    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    params.push(`%${filters.search}%`);
+  }
+
+  if (filters.registrationDateFrom) {
+    paramCount++;
+    query += ` AND registration_date >= $${paramCount}`;
+    params.push(filters.registrationDateFrom);
+  }
+
+  if (filters.registrationDateTo) {
+    paramCount++;
+    query += ` AND registration_date <= $${paramCount}`;
+    params.push(filters.registrationDateTo);
+  }
+
+  const result = await pool.query(query, params);
+  return parseInt(result.rows[0].total);
+};
+
 module.exports = {
   createMembersTable,
   findAll,
@@ -174,5 +259,7 @@ module.exports = {
   update,
   remove,
   findByFilters,
-  countByFilters
+  findByFiltersWithDates,
+  countByFilters,
+  countByFiltersWithDates
 };

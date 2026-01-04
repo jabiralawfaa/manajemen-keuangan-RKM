@@ -205,7 +205,7 @@ flowchart LR
 
 ### 6.1 Modul Manajemen Anggota
 **RF-MA-001**: Input Data Anggota
-- Field wajib: Tanggal daftar, No KK, No urut RKM, Nama KK, Nama istri, No HP, Alamat lengkap, Nama tertanggung, Jumlah tanggungan
+- Field wajib: Tanggal daftar, No urut RKM, Nama, No HP, RT/RW, Dusun, Desa, Kecamatan, Kabupaten, Jumlah tanggungan
 - Validasi format data (tanggal, nomor HP, dll)
 - Generate nomor anggota otomatis
 - Simpan ke database online & offline
@@ -322,16 +322,14 @@ CREATE TABLE users (
 CREATE TABLE members (
     id SERIAL PRIMARY KEY,
     registration_date DATE NOT NULL,
-    kk_number VARCHAR(255),
     member_number VARCHAR(100) UNIQUE NOT NULL, -- format: RKM-YYYY-001
-    head_name VARCHAR(255) NOT NULL,
-    wife_name VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
-    street VARCHAR(255),
-    kelurahan VARCHAR(255),
+    rt_rw VARCHAR(100),
+    dusun VARCHAR(255),
+    desa VARCHAR(255),
     kecamatan VARCHAR(255),
     kabupaten VARCHAR(255),
-    beneficiary_name VARCHAR(255) NOT NULL,
     dependents_count INTEGER DEFAULT 0,
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

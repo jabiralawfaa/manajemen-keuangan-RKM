@@ -6,16 +6,14 @@ const createMembersTable = async () => {
     CREATE TABLE IF NOT EXISTS members (
       id SERIAL PRIMARY KEY,
       registration_date DATE NOT NULL,
-      kk_number VARCHAR(255),
       member_number VARCHAR(100) UNIQUE NOT NULL,
-      head_name VARCHAR(255) NOT NULL,
-      wife_name VARCHAR(255),
+      name VARCHAR(255) NOT NULL,
       phone VARCHAR(20),
-      street VARCHAR(255),
-      kelurahan VARCHAR(255),
+      rt_rw VARCHAR(100),
+      dusun VARCHAR(255),
+      desa VARCHAR(255),
       kecamatan VARCHAR(255),
       kabupaten VARCHAR(255),
-      beneficiary_name VARCHAR(255) NOT NULL,
       dependents_count INTEGER DEFAULT 0,
       status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -54,25 +52,22 @@ const findByMemberNumber = async (memberNumber) => {
 const create = async (memberData) => {
   const query = `
     INSERT INTO members (
-      registration_date, kk_number, member_number, head_name, 
-      wife_name, phone, street, kelurahan, kecamatan, kabupaten, 
-      beneficiary_name, dependents_count, status
-    ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+      registration_date, member_number, name, phone, rt_rw, dusun,
+      desa, kecamatan, kabupaten, dependents_count, status
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *
   `;
   const result = await pool.query(query, [
     memberData.registrationDate,
-    memberData.kkNumber,
     memberData.memberNumber,
-    memberData.headName,
-    memberData.wifeName,
+    memberData.name,
     memberData.phone,
-    memberData.street,
-    memberData.kelurahan,
+    memberData.rtRw,
+    memberData.dusun,
+    memberData.desa,
     memberData.kecamatan,
     memberData.kabupaten,
-    memberData.beneficiaryName,
     memberData.dependentsCount,
     memberData.status
   ]);
@@ -82,12 +77,11 @@ const create = async (memberData) => {
 // Fungsi untuk memperbarui member
 const update = async (id, memberData) => {
   const query = `
-    UPDATE members 
-    SET 
-      registration_date = $2, kk_number = $3, member_number = $4, 
-      head_name = $5, wife_name = $6, phone = $7, street = $8, 
-      kelurahan = $9, kecamatan = $10, kabupaten = $11, 
-      beneficiary_name = $12, dependents_count = $13, status = $14, 
+    UPDATE members
+    SET
+      registration_date = $2, member_number = $3, name = $4,
+      phone = $5, rt_rw = $6, dusun = $7, desa = $8, kecamatan = $9,
+      kabupaten = $10, dependents_count = $11, status = $12,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = $1
     RETURNING *
@@ -95,16 +89,14 @@ const update = async (id, memberData) => {
   const result = await pool.query(query, [
     id,
     memberData.registrationDate,
-    memberData.kkNumber,
     memberData.memberNumber,
-    memberData.headName,
-    memberData.wifeName,
+    memberData.name,
     memberData.phone,
-    memberData.street,
-    memberData.kelurahan,
+    memberData.rtRw,
+    memberData.dusun,
+    memberData.desa,
     memberData.kecamatan,
     memberData.kabupaten,
-    memberData.beneficiaryName,
     memberData.dependentsCount,
     memberData.status
   ]);
@@ -132,12 +124,12 @@ const findByFilters = async (filters, limit = 10, offset = 0, sortBy = 'created_
 
   if (filters.search) {
     paramCount++;
-    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    query += ` AND (name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
     params.push(`%${filters.search}%`);
   }
 
   // Validasi sortBy dan sortOrder untuk mencegah SQL injection
-  const allowedSortColumns = ['created_at', 'updated_at', 'head_name', 'member_number', 'registration_date'];
+  const allowedSortColumns = ['created_at', 'updated_at', 'name', 'member_number', 'registration_date'];
   const allowedSortOrders = ['ASC', 'DESC'];
 
   const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
@@ -164,7 +156,7 @@ const findByFiltersWithDates = async (filters, limit = 10, offset = 0, sortBy = 
 
   if (filters.search) {
     paramCount++;
-    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    query += ` AND (name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
     params.push(`%${filters.search}%`);
   }
 
@@ -181,7 +173,7 @@ const findByFiltersWithDates = async (filters, limit = 10, offset = 0, sortBy = 
   }
 
   // Validasi sortBy dan sortOrder untuk mencegah SQL injection
-  const allowedSortColumns = ['created_at', 'updated_at', 'head_name', 'member_number', 'registration_date'];
+  const allowedSortColumns = ['created_at', 'updated_at', 'name', 'member_number', 'registration_date'];
   const allowedSortOrders = ['ASC', 'DESC'];
 
   const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
@@ -208,7 +200,7 @@ const countByFilters = async (filters) => {
 
   if (filters.search) {
     paramCount++;
-    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    query += ` AND (name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
     params.push(`%${filters.search}%`);
   }
 
@@ -230,7 +222,7 @@ const countByFiltersWithDates = async (filters) => {
 
   if (filters.search) {
     paramCount++;
-    query += ` AND (head_name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
+    query += ` AND (name ILIKE $${paramCount} OR member_number ILIKE $${paramCount})`;
     params.push(`%${filters.search}%`);
   }
 

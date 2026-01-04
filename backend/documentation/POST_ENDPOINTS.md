@@ -15,16 +15,14 @@ Dokumen ini menjelaskan semua endpoint POST yang telah diimplementasikan berdasa
   ```json
   {
     "registrationDate": "2025-01-15",
-    "kkNumber": "1234567890123456",
     "memberNumber": "RKM-2025-001",
-    "headName": "Ahmad Fauzi",
-    "wifeName": "Siti Aminah",
+    "name": "Ahmad Fauzi",
     "phone": "081234567891",
-    "street": "Jl. Raya No. 123",
-    "kelurahan": "Sukamaju",
+    "rtRw": "001/002",
+    "dusun": "Dusun Mekar Jaya",
+    "desa": "Sukamaju",
     "kecamatan": "Pancoran",
     "kabupaten": "Jakarta Selatan",
-    "beneficiaryName": "Ahmad Fauzi",
     "dependentsCount": 4,
     "status": "active"
   }
@@ -222,7 +220,7 @@ Dokumen ini menjelaskan semua endpoint POST yang telah diimplementasikan berdasa
 ## Kebutuhan SRS yang Terpenuhi
 
 ### RF-MA-001: Input Data Anggota
-- ✅ Field wajib: Tanggal daftar, No KK, No urut RKM, Nama KK, Nama istri, No HP, Alamat lengkap, Nama tertanggung, Jumlah tanggungan
+- ✅ Field wajib: Tanggal daftar, No urut RKM, Nama, No HP, RT/RW, Dusun, Desa, Kecamatan, Kabupaten, Jumlah tanggungan
 - ✅ Validasi format data (tanggal, nomor HP, dll)
 - ✅ Generate nomor anggota otomatis (akan diimplementasikan)
 - ✅ Simpan ke database online & offline

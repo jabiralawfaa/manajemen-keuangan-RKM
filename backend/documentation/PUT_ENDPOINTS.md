@@ -15,16 +15,14 @@ Dokumen ini menjelaskan semua endpoint PUT (Update) yang telah diimplementasikan
   ```json
   {
     "registrationDate": "2025-01-15",
-    "kkNumber": "1234567890123456",
     "memberNumber": "RKM-2025-001",
-    "headName": "Ahmad Fauzi Update",
-    "wifeName": "Siti Aminah Update",
+    "name": "Ahmad Fauzi Update",
     "phone": "081234567891",
-    "street": "Jl. Raya No. 123 Update",
-    "kelurahan": "Sukamaju Update",
+    "rtRw": "001/002",
+    "dusun": "Dusun Mekar Jaya",
+    "desa": "Sukamaju",
     "kecamatan": "Pancoran Update",
     "kabupaten": "Jakarta Selatan Update",
-    "beneficiaryName": "Ahmad Fauzi Update",
     "dependentsCount": 4,
     "status": "active"
   }

@@ -44,9 +44,19 @@ Dokumen ini menjelaskan semua endpoint GET yang telah diimplementasikan berdasar
   ```json
   {
     "id": 1,
-    "head_name": "Nama Kepala Keluarga",
+    "name": "Nama Anggota",
     "member_number": "RKM-2025-001",
-    ...
+    "registration_date": "2025-01-15",
+    "phone": "081234567891",
+    "rt_rw": "001/002",
+    "dusun": "Dusun Mekar Jaya",
+    "desa": "Sukamaju",
+    "kecamatan": "Pancoran",
+    "kabupaten": "Jakarta Selatan",
+    "dependents_count": 4,
+    "status": "active",
+    "created_at": "2025-01-15T07:00:00.000Z",
+    "updated_at": "2025-01-15T07:00:00.000Z"
   }
   ```
 

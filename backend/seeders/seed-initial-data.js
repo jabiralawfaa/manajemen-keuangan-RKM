@@ -31,46 +31,40 @@ const seedInitialData = async () => {
       const membersData = [
         {
           registration_date: new Date('2025-01-15'),
-          kk_number: '1234567890123456',
           member_number: 'RKM-2025-001',
-          head_name: 'Ahmad Fauzi',
-          wife_name: 'Siti Aminah',
+          name: 'Ahmad Fauzi',
           phone: '081234567891',
-          street: 'Jl. Raya No. 123',
-          kelurahan: 'Sukamaju',
+          rt_rw: '001/002',
+          dusun: 'Dusun Mekar Jaya',
+          desa: 'Sukamaju',
           kecamatan: 'Pancoran',
           kabupaten: 'Jakarta Selatan',
-          beneficiary_name: 'Ahmad Fauzi',
           dependents_count: 4,
           status: 'active'
         },
         {
           registration_date: new Date('2025-01-20'),
-          kk_number: '2345678901234567',
           member_number: 'RKM-2025-002',
-          head_name: 'Budi Santoso',
-          wife_name: 'Sri Handayani',
+          name: 'Budi Santoso',
           phone: '081234567892',
-          street: 'Jl. Merdeka No. 45',
-          kelurahan: 'Bakti Jaya',
+          rt_rw: '002/003',
+          dusun: 'Dusun Bakti Jaya',
+          desa: 'Bakti Jaya',
           kecamatan: 'Sawangan',
           kabupaten: 'Depok',
-          beneficiary_name: 'Budi Santoso',
           dependents_count: 3,
           status: 'active'
         },
         {
           registration_date: new Date('2025-02-01'),
-          kk_number: '3456789012345678',
           member_number: 'RKM-2025-003',
-          head_name: 'Rizki Pratama',
-          wife_name: 'Dewi Lestari',
+          name: 'Rizki Pratama',
           phone: '081234567893',
-          street: 'Jl. Sudirman No. 78',
-          kelurahan: 'Menteng',
+          rt_rw: '003/004',
+          dusun: 'Dusun Menteng',
+          desa: 'Menteng',
           kecamatan: 'Gambir',
           kabupaten: 'Jakarta Pusat',
-          beneficiary_name: 'Rizki Pratama',
           dependents_count: 5,
           status: 'active'
         }
@@ -78,15 +72,13 @@ const seedInitialData = async () => {
 
       for (const member of membersData) {
         await pool.query(`
-          INSERT INTO members (registration_date, kk_number, member_number, head_name, 
-            wife_name, phone, street, kelurahan, kecamatan, kabupaten, 
-            beneficiary_name, dependents_count, status, created_at, updated_at) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);
+          INSERT INTO members (registration_date, member_number, name, phone, rt_rw,
+            dusun, desa, kecamatan, kabupaten, dependents_count, status, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);
         `, [
-          member.registration_date, member.kk_number, member.member_number, member.head_name,
-          member.wife_name, member.phone, member.street, member.kelurahan, member.kecamatan,
-          member.kabupaten, member.beneficiary_name, member.dependents_count, member.status,
-          new Date(), new Date()
+          member.registration_date, member.member_number, member.name, member.phone, member.rt_rw,
+          member.dusun, member.desa, member.kecamatan, member.kabupaten, member.dependents_count,
+          member.status, new Date(), new Date()
         ]);
       }
       console.log('✅ Data anggota contoh ditambahkan');

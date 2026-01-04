@@ -22,10 +22,10 @@ const createPaymentsTable = async () => {
 // Fungsi untuk mencari semua pembayaran
 const findAll = async (limit = 10, offset = 0) => {
   const query = `
-    SELECT p.*, m.head_name, m.member_number 
+    SELECT p.*, m.name, m.member_number
     FROM payments p
     LEFT JOIN members m ON p.member_id = m.id
-    ORDER BY p.created_at DESC 
+    ORDER BY p.created_at DESC
     LIMIT $1 OFFSET $2
   `;
   const result = await pool.query(query, [limit, offset]);
@@ -35,7 +35,7 @@ const findAll = async (limit = 10, offset = 0) => {
 // Fungsi untuk mencari pembayaran berdasarkan ID
 const findById = async (id) => {
   const query = `
-    SELECT p.*, m.head_name, m.member_number 
+    SELECT p.*, m.name, m.member_number
     FROM payments p
     LEFT JOIN members m ON p.member_id = m.id
     WHERE p.id = $1
@@ -112,7 +112,7 @@ const remove = async (id) => {
 // Fungsi untuk mencari pembayaran berdasarkan bulan
 const findByMonth = async (month) => {
   const query = `
-    SELECT p.*, m.head_name, m.member_number 
+    SELECT p.*, m.name, m.member_number
     FROM payments p
     LEFT JOIN members m ON p.member_id = m.id
     WHERE p.month = $1
@@ -125,7 +125,7 @@ const findByMonth = async (month) => {
 // Fungsi untuk mencari pembayaran berdasarkan tahun
 const findByYear = async (year) => {
   const query = `
-    SELECT p.*, m.head_name, m.member_number 
+    SELECT p.*, m.name, m.member_number
     FROM payments p
     LEFT JOIN members m ON p.member_id = m.id
     WHERE EXTRACT(YEAR FROM payment_date) = $1

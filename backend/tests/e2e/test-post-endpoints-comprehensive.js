@@ -50,25 +50,23 @@ async function testComprehensivePostEndpoints() {
     try {
       const newMember = {
         registrationDate: '2025-04-01',
-        kkNumber: '7777888899990000',
         memberNumber: 'RKM-2025-005',
-        headName: 'Susi Susanti',
-        wifeName: 'Alan Budiman',
+        name: 'Susi Susanti',
         phone: '081234567890',
-        street: 'Jl. Badminton No. 10',
-        kelurahan: 'Sukamaju',
+        rtRw: '005/006',
+        dusun: 'Dusun Badminton',
+        desa: 'Sukamaju',
         kecamatan: 'Sukajaya',
         kabupaten: 'Bandung',
-        beneficiaryName: 'Susi Susanti',
         dependentsCount: 2,
         status: 'active'
       };
 
-      const membersResponse = await axios.post(`${BASE_URL}/api/members`, newMember, { 
-        headers: { 
+      const membersResponse = await axios.post(`${BASE_URL}/api/members`, newMember, {
+        headers: {
           'Authorization': `Bearer ${sekretarisToken}`,
           'Content-Type': 'application/json'
-        } 
+        }
       });
       console.log('✅ POST /api/members (oleh sekretaris): Berhasil - Status:', membersResponse.status);
       console.log('   Pesan:', membersResponse.data.message);
@@ -197,25 +195,23 @@ async function testComprehensivePostEndpoints() {
     try {
       const newMember2 = {
         registrationDate: '2025-05-01',
-        kkNumber: '8888999900001111',
         memberNumber: 'RKM-2025-006',
-        headName: 'Budi Setiawan',
-        wifeName: 'Ani Setiawan',
+        name: 'Budi Setiawan',
         phone: '081234567902',
-        street: 'Jl. Mawar No. 15',
-        kelurahan: 'Sukamulya',
+        rtRw: '006/007',
+        dusun: 'Dusun Mawar',
+        desa: 'Sukamulya',
         kecamatan: 'Sukaresik',
         kabupaten: 'Garut',
-        beneficiaryName: 'Budi Setiawan',
         dependentsCount: 4,
         status: 'active'
       };
 
-      const membersResponse2 = await axios.post(`${BASE_URL}/api/members`, newMember2, { 
-        headers: { 
+      const membersResponse2 = await axios.post(`${BASE_URL}/api/members`, newMember2, {
+        headers: {
           'Authorization': `Bearer ${bendaharaToken}`,
           'Content-Type': 'application/json'
-        } 
+        }
       });
       console.log('❌ POST /api/members (oleh bukan sekretaris/ketua): Seharusnya gagal tapi berhasil - Status:', membersResponse2.status);
     } catch (error) {

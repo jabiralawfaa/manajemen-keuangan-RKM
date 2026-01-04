@@ -108,22 +108,20 @@ router.post('/', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
   try {
     const {
       registrationDate,
-      kkNumber,
       memberNumber,
-      headName,
-      wifeName,
+      name,
       phone,
-      street,
-      kelurahan,
+      rtRw,
+      dusun,
+      desa,
       kecamatan,
       kabupaten,
-      beneficiaryName,
       dependentsCount,
       status = 'active'
     } = req.body;
 
     // Validasi input
-    if (!registrationDate || !kkNumber || !memberNumber || !headName || !wifeName || !phone || !beneficiaryName || dependentsCount === undefined) {
+    if (!registrationDate || !memberNumber || !name || !phone || !rtRw || !dusun || !desa || !kecamatan || !kabupaten || dependentsCount === undefined) {
       return res.status(400).json({ message: 'Semua field wajib diisi' });
     }
 
@@ -135,16 +133,14 @@ router.post('/', auth, checkRole(['sekretaris', 'ketua']), async (req, res) => {
 
     const member = await Member.create({
       registrationDate,
-      kkNumber,
       memberNumber,
-      headName,
-      wifeName,
+      name,
       phone,
-      street,
-      kelurahan,
+      rtRw,
+      dusun,
+      desa,
       kecamatan,
       kabupaten,
-      beneficiaryName,
       dependentsCount,
       status
     });
@@ -166,16 +162,14 @@ router.put('/:id', auth, checkRole(['sekretaris', 'ketua']), async (req, res) =>
   try {
     const {
       registrationDate,
-      kkNumber,
       memberNumber,
-      headName,
-      wifeName,
+      name,
       phone,
-      street,
-      kelurahan,
+      rtRw,
+      dusun,
+      desa,
       kecamatan,
       kabupaten,
-      beneficiaryName,
       dependentsCount,
       status
     } = req.body;
@@ -184,16 +178,14 @@ router.put('/:id', auth, checkRole(['sekretaris', 'ketua']), async (req, res) =>
       req.params.id,
       {
         registrationDate,
-        kkNumber,
         memberNumber,
-        headName,
-        wifeName,
+        name,
         phone,
-        street,
-        kelurahan,
+        rtRw,
+        dusun,
+        desa,
         kecamatan,
         kabupaten,
-        beneficiaryName,
         dependentsCount,
         status
       }

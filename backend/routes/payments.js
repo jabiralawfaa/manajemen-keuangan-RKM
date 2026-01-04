@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Buat filter berdasarkan bulan dan memberId jika disediakan
-    let query = 'SELECT p.*, m.head_name, m.member_number FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
+    let query = 'SELECT p.*, m.name, m.member_number FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
     const params = [];
     let paramCount = 0;
 

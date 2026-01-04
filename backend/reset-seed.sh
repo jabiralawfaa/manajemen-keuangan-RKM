@@ -8,13 +8,13 @@ require('dotenv').config();
 
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 });
 
 client.connect()
   .then(() => {
     console.log('✅ Terhubung ke database');
-    return client.query('DROP TABLE IF EXISTS payments, expenses, members, users CASCADE;');
+    return client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
   })
   .then(() => {
     console.log('✅ Semua tabel dihapus');

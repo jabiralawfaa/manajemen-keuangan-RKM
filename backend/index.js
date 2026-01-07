@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { connectDB } = require('./config/db');
+const { scheduleWeeklyDependentsIncrease } = require('./utils/scheduler');
 
 // Import model untuk membuat tabel
 const { createUsersTable } = require('./models/User');
@@ -22,8 +23,10 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/expenses', require('./routes/expenses'));
+app.use('/api/users', require('./routes/users'));
 app.use('/api/change-password', require('./routes/changePassword'));
 app.use('/api/reports', require('./routes/financialReports'));
+app.use('/api/export', require('./routes/exportExcel'));
 
 // Routes untuk operasi DELETE
 app.use('/api/delete/members', require('./routes/deleteMembers'));
@@ -43,6 +46,9 @@ connectDB().then(async () => {
   await createPaymentsTable();
   await createExpensesTable();
   console.log('Tabel-tabel berhasil dibuat');
+
+  // Mulai scheduler
+  scheduleWeeklyDependentsIncrease();
 
   app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);

@@ -70,7 +70,7 @@ router.get('/income', auth, checkRole(['bendahara', 'ketua']), async (req, res) 
   try {
     const { month, year } = req.query;
 
-    let query = 'SELECT p.*, m.head_name, m.member_number FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
+    let query = 'SELECT p.*, m.name, m.member_number FROM payments p LEFT JOIN members m ON p.member_id = m.id WHERE 1=1';
     const params = [];
     let paramCount = 0;
 

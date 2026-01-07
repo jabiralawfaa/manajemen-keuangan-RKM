@@ -125,6 +125,21 @@ router.post('/', auth, checkRole(['bendahara', 'ketua']), async (req, res) => {
       syncStatus: 'synced' // Default status saat dibuat
     });
 
+    // Cek apakah jumlah pembayaran merupakan kelipatan 20000
+    const amountValue = parseFloat(amount);
+    if (amountValue % 20000 === 0) {
+      const multiple = Math.floor(amountValue / 20000);
+
+      // Kurangi tanggungan anggota sebanyak kelipatan 20000
+      const newDependentsCount = Math.max(0, member.dependents_count - multiple);
+
+      // Update jumlah tanggungan anggota
+      await pool.query(
+        'UPDATE members SET dependents_count = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [newDependentsCount, memberId]
+      );
+    }
+
     res.status(201).json({
       message: 'Pembayaran berhasil ditambahkan',
       payment

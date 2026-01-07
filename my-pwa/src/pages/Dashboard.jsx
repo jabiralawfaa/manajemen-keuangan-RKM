@@ -1,6 +1,7 @@
 // src/pages/Dashboard.jsx
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -19,6 +20,12 @@ const Dashboard = () => {
               <h1 className="text-xl font-semibold text-gray-900">Dashboard RKM</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Link
+                to="/profile"
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Profil
+              </Link>
               <div className="text-sm text-gray-700">
                 Selamat datang, <span className="font-medium">{user?.name || user?.username}</span> ({user?.role})
               </div>
@@ -42,25 +49,25 @@ const Dashboard = () => {
               <p className="text-gray-600 mb-6">
                 Selamat datang di sistem administrasi Rukun Kematian Muslim. Gunakan menu navigasi untuk mengakses berbagai fitur.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Menu Cards */}
-                <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+                <Link to="/members" className="bg-blue-50 rounded-lg p-6 border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer">
                   <h3 className="text-lg font-medium text-blue-900 mb-2">Manajemen Anggota</h3>
                   <p className="text-blue-700">Kelola data anggota RKM</p>
-                </div>
-                
-                <div className="bg-green-50 rounded-lg p-6 border border-green-100">
+                </Link>
+
+                <Link to="/finance" className="bg-green-50 rounded-lg p-6 border border-green-100 hover:bg-green-100 transition-colors cursor-pointer">
                   <h3 className="text-lg font-medium text-green-900 mb-2">Keuangan</h3>
                   <p className="text-green-700">Pencatatan pemasukan dan pengeluaran</p>
-                </div>
-                
-                <div className="bg-purple-50 rounded-lg p-6 border border-purple-100">
+                </Link>
+
+                <Link to="/reports" className="bg-purple-50 rounded-lg p-6 border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer">
                   <h3 className="text-lg font-medium text-purple-900 mb-2">Laporan</h3>
                   <p className="text-purple-700">Laporan keuangan dan administrasi</p>
-                </div>
+                </Link>
               </div>
-              
+
               <div className="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
                 <h4 className="text-lg font-medium text-yellow-900 mb-2">Informasi Pengguna</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-yellow-800">
@@ -74,6 +81,26 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Special section for ketua role */}
+      {user?.role === 'ketua' && (
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="bg-indigo-50 rounded-lg shadow p-6 border border-indigo-100">
+            <h2 className="text-xl font-bold text-indigo-900 mb-4">Fitur Khusus Ketua</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link to="/users" className="bg-white rounded-lg p-6 border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Manajemen Pengguna</h3>
+                <p className="text-gray-700">Tambah, edit, dan hapus akun pengguna sistem RKM</p>
+              </Link>
+
+              <div className="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Laporan Administrasi</h3>
+                <p className="text-gray-700">Laporan keanggotaan dan administrasi lainnya</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
